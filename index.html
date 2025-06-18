@@ -1,49 +1,78 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="transition duration-300">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Base64 Encoder/Decoder</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
-<body class="bg-gray-100 min-h-screen flex items-center justify-center">
-  <div class="bg-white p-6 rounded-xl shadow-xl w-full max-w-2xl">
-    <h1 class="text-2xl font-bold text-center text-blue-600 mb-6">Base64 Encode / Decode Tool</h1>
-
-    <label class="block text-gray-700 font-semibold mb-1" for="input">Nhập nội dung:</label>
-    <textarea id="input" class="w-full p-3 border border-gray-300 rounded-md mb-4 focus:outline-none focus:ring-2 focus:ring-blue-400" rows="4" placeholder="Nhập nội dung cần encode hoặc decode..."></textarea>
-
-    <div class="flex justify-between mb-4">
-      <button onclick="encode()" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Encode</button>
-      <button onclick="decode()" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">Decode</button>
-      <button onclick="clearAll()" class="bg-gray-300 text-black px-4 py-2 rounded hover:bg-gray-400">Clear</button>
+<body class="bg-gray-100 dark:bg-gray-900 min-h-screen flex items-center justify-center transition duration-300">
+  <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-xl w-full max-w-2xl text-gray-800 dark:text-gray-200 transition duration-300">
+    <!-- Logo + Theme Toggle -->
+    <div class="flex justify-between items-center mb-4">
+      <!-- Logo Placeholder -->
+      <div class="flex items-center gap-2">
+        <img src="logo-placeholder.png" alt="Logo" class="w-10 h-10 rounded-full border border-gray-300 dark:border-gray-600" />
+        <span class="text-xl font-semibold">Base64 Tool</span>
+      </div>
+      <!-- Toggle Theme -->
+      <button onclick="toggleDarkMode()" class="px-3 py-1 rounded bg-gray-200 dark:bg-gray-700 text-sm hover:bg-gray-300 dark:hover:bg-gray-600">
+        Toggle Theme
+      </button>
     </div>
 
-    <label class="block text-gray-700 font-semibold mb-1" for="output">Kết quả:</label>
-    <textarea id="output" class="w-full p-3 border border-gray-300 rounded-md mb-4 bg-gray-50" rows="4" placeholder="Kết quả sẽ hiển thị ở đây..." readonly></textarea>
+    <h1 class="text-2xl font-bold text-center text-blue-600 dark:text-blue-400 mb-6">Base64 Encode / Decode Tool</h1>
 
-    <button onclick="copyToClipboard()" class="w-full bg-purple-500 text-white py-2 rounded hover:bg-purple-600">Copy Kết Quả</button>
+    <label class="block font-semibold mb-1">Enter text or drag a file:</label>
+    <textarea id="input" class="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-md mb-4 bg-white dark:bg-gray-700 text-black dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-400 dark:focus:ring-blue-600" rows="4" placeholder="Paste your text or base64 string here..."></textarea>
 
-    <p id="status" class="text-sm text-green-600 mt-2 hidden">Đã copy vào clipboard!</p>
+    <div id="drop-zone" class="w-full text-center p-4 mb-4 border-2 border-dashed border-blue-400 rounded-lg text-blue-600 dark:text-blue-300 bg-white dark:bg-gray-700 hover:bg-blue-50 dark:hover:bg-gray-600 cursor-pointer transition">
+      Drag & drop a file here to encode as base64
+    </div>
+
+    <div class="flex justify-between mb-4">
+      <button onclick="manualEncode()" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Encode</button>
+      <button onclick="manualDecode()" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">Decode</button>
+      <button onclick="clearAll()" class="bg-gray-300 dark:bg-gray-600 text-black dark:text-white px-4 py-2 rounded hover:bg-gray-400 dark:hover:bg-gray-500">Clear</button>
+    </div>
+
+    <label class="block font-semibold mb-1">Result:</label>
+    <textarea id="output" class="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-md mb-4 bg-gray-50 dark:bg-gray-700 text-black dark:text-white" rows="4" readonly></textarea>
+
+    <div class="flex justify-between items-center">
+      <button onclick="copyToClipboard()" class="bg-purple-500 text-white px-4 py-2 rounded hover:bg-purple-600">Copy Result</button>
+      <button id="downloadBtn" onclick="downloadDecoded()" class="bg-emerald-500 text-white px-4 py-2 rounded hover:bg-emerald-600 hidden">Download Decoded</button>
+    </div>
+
+    <p id="status" class="text-sm text-green-600 dark:text-green-400 mt-2 hidden">Copied to clipboard!</p>
   </div>
 
   <script>
-    function encode() {
+    function showError(title, text) {
+      Swal.fire({ icon: 'error', title, text, confirmButtonColor: '#d33' });
+    }
+
+    function manualEncode() {
       const input = document.getElementById("input").value;
       try {
-        document.getElementById("output").value = btoa(input);
+        const encoded = btoa(unescape(encodeURIComponent(input)));
+        document.getElementById("output").value = encoded;
         document.getElementById("status").classList.add("hidden");
-      } catch (e) {
-        alert("Lỗi encode: có thể do ký tự không hợp lệ (Unicode?).");
+        document.getElementById("downloadBtn").classList.add("hidden");
+      } catch {
+        showError("Encoding Error", "The input contains characters that can't be base64-encoded.");
       }
     }
 
-    function decode() {
+    function manualDecode() {
       const input = document.getElementById("input").value;
       try {
-        document.getElementById("output").value = atob(input);
+        const decoded = decodeURIComponent(escape(atob(input)));
+        document.getElementById("output").value = decoded;
         document.getElementById("status").classList.add("hidden");
-      } catch (e) {
-        alert("Lỗi decode: Chuỗi không phải base64 hợp lệ.");
+        document.getElementById("downloadBtn").classList.remove("hidden");
+      } catch {
+        showError("Decoding Error", "Invalid base64 string.");
       }
     }
 
@@ -58,7 +87,79 @@
       document.getElementById("input").value = "";
       document.getElementById("output").value = "";
       document.getElementById("status").classList.add("hidden");
+      document.getElementById("downloadBtn").classList.add("hidden");
     }
+
+    function isBase64(str) {
+      return /^[A-Za-z0-9+/=]{10,}$/.test(str.trim());
+    }
+
+    function downloadDecoded() {
+      const content = document.getElementById("output").value;
+      const blob = new Blob([content], { type: 'application/octet-stream' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = "decoded.txt";
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    // Drag & drop
+    const dropZone = document.getElementById('drop-zone');
+    dropZone.addEventListener('dragover', e => {
+      e.preventDefault();
+      dropZone.classList.add("bg-blue-100");
+    });
+    dropZone.addEventListener('dragleave', () => {
+      dropZone.classList.remove("bg-blue-100");
+    });
+    dropZone.addEventListener('drop', e => {
+      e.preventDefault();
+      dropZone.classList.remove("bg-blue-100");
+      const file = e.dataTransfer.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(event) {
+        const result = event.target.result;
+        const base64 = btoa(result);
+        document.getElementById("input").value = result;
+        document.getElementById("output").value = base64;
+        document.getElementById("downloadBtn").classList.add("hidden");
+      };
+      reader.readAsBinaryString(file);
+    });
+
+    // Detect input type
+    document.getElementById("input").addEventListener("input", () => {
+      const val = document.getElementById("input").value.trim();
+      if (isBase64(val)) {
+        try {
+          const decoded = decodeURIComponent(escape(atob(val)));
+          document.getElementById("output").value = decoded;
+          document.getElementById("downloadBtn").classList.remove("hidden");
+        } catch {
+          document.getElementById("downloadBtn").classList.add("hidden");
+        }
+      } else {
+        document.getElementById("downloadBtn").classList.add("hidden");
+      }
+    });
+
+    // Toggle dark mode
+    function toggleDarkMode() {
+      const html = document.documentElement;
+      html.classList.toggle("dark");
+      localStorage.setItem("theme", html.classList.contains("dark") ? "dark" : "light");
+    }
+
+    // Init theme
+    (() => {
+      const savedTheme = localStorage.getItem("theme");
+      if (savedTheme === "dark") {
+        document.documentElement.classList.add("dark");
+      }
+    })();
   </script>
 </body>
 </html>
