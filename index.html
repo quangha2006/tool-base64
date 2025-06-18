@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Base64 Encoder/Decoder</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center">
+  <div class="bg-white p-6 rounded-xl shadow-xl w-full max-w-2xl">
+    <h1 class="text-2xl font-bold text-center text-blue-600 mb-6">Base64 Encode / Decode Tool</h1>
+
+    <label class="block text-gray-700 font-semibold mb-1" for="input">Nhập nội dung:</label>
+    <textarea id="input" class="w-full p-3 border border-gray-300 rounded-md mb-4 focus:outline-none focus:ring-2 focus:ring-blue-400" rows="4" placeholder="Nhập nội dung cần encode hoặc decode..."></textarea>
+
+    <div class="flex justify-between mb-4">
+      <button onclick="encode()" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Encode</button>
+      <button onclick="decode()" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">Decode</button>
+      <button onclick="clearAll()" class="bg-gray-300 text-black px-4 py-2 rounded hover:bg-gray-400">Clear</button>
+    </div>
+
+    <label class="block text-gray-700 font-semibold mb-1" for="output">Kết quả:</label>
+    <textarea id="output" class="w-full p-3 border border-gray-300 rounded-md mb-4 bg-gray-50" rows="4" placeholder="Kết quả sẽ hiển thị ở đây..." readonly></textarea>
+
+    <button onclick="copyToClipboard()" class="w-full bg-purple-500 text-white py-2 rounded hover:bg-purple-600">Copy Kết Quả</button>
+
+    <p id="status" class="text-sm text-green-600 mt-2 hidden">Đã copy vào clipboard!</p>
+  </div>
+
+  <script>
+    function encode() {
+      const input = document.getElementById("input").value;
+      try {
+        document.getElementById("output").value = btoa(input);
+        document.getElementById("status").classList.add("hidden");
+      } catch (e) {
+        alert("Lỗi encode: có thể do ký tự không hợp lệ (Unicode?).");
+      }
+    }
+
+    function decode() {
+      const input = document.getElementById("input").value;
+      try {
+        document.getElementById("output").value = atob(input);
+        document.getElementById("status").classList.add("hidden");
+      } catch (e) {
+        alert("Lỗi decode: Chuỗi không phải base64 hợp lệ.");
+      }
+    }
+
+    function copyToClipboard() {
+      const output = document.getElementById("output");
+      output.select();
+      document.execCommand("copy");
+      document.getElementById("status").classList.remove("hidden");
+    }
+
+    function clearAll() {
+      document.getElementById("input").value = "";
+      document.getElementById("output").value = "";
+      document.getElementById("status").classList.add("hidden");
+    }
+  </script>
+</body>
+</html>
