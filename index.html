@@ -100,11 +100,18 @@
 
     <!-- SHA256 Tab -->
     <div id="hash" class="tab-content hidden">
-      <label class="font-semibold">Text to hash (SHA256):</label>
+      <label class="font-semibold">Text to hash:</label>
       <input id="hashInput" class="w-full p-3 mb-3 border rounded dark:bg-gray-800 dark:border-gray-600 dark:text-white" />
-      <button onclick="generateHash()" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Generate SHA256</button>
-      <textarea id="hashResult" class="w-full p-3 mt-3 border rounded bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white" rows="3" readonly></textarea>
+
+      <div class="flex gap-2 mb-3">
+        <button onclick="generateHash('SHA-256')" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">SHA-256</button>
+        <button onclick="generateHash('SHA-1')" class="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600">SHA-1</button>
+        <button onclick="generateHash('MD5')" class="bg-pink-500 text-white px-4 py-2 rounded hover:bg-pink-600">MD5</button>
+      </div>
+
+      <textarea id="hashResult" class="w-full p-3 border rounded bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white" rows="3" readonly></textarea>
     </div>
+
     </div>
   </div>
 
@@ -251,14 +258,41 @@ function downloadQR() {
   link.click();
 }
 
-async function generateHash() {
+async function generateHash(algorithm) {
   const text = document.getElementById("hashInput").value;
+
+  if (!text.trim()) {
+    showError("Please enter text to hash.");
+    return;
+  }
+
+  if (!window.crypto.subtle && algorithm !== "MD5") {
+    showError("Your browser does not support crypto.subtle");
+    return;
+  }
+
+  if (algorithm === "MD5") {
+    const hash = await md5(text);
+    document.getElementById("hashResult").value = hash;
+    return;
+  }
+
   const encoder = new TextEncoder();
   const data = encoder.encode(text);
-  const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+  const hashBuffer = await crypto.subtle.digest(algorithm, data);
   const hashArray = Array.from(new Uint8Array(hashBuffer));
-  const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  const hashHex = hashArray.map(b => b.toString(16).padStart(2, "0")).join('');
   document.getElementById("hashResult").value = hashHex;
+}
+
+async function md5(str) {
+  try {
+    const buffer = new TextEncoder().encode(str);
+    const digest = await crypto.subtle.digest("MD5", buffer);
+    return Array.from(new Uint8Array(digest)).map(b => b.toString(16).padStart(2, '0')).join('');
+  } catch {
+    return "MD5 not supported in this browser";
+  }
 }
 </script>
 </body>
