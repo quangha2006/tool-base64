@@ -12,6 +12,7 @@
 </head>
 <body class="bg-gray-100 dark:bg-gray-900 min-h-screen py-10 text-gray-800 dark:text-gray-200 transition duration-300">
   <div class="max-w-4xl mx-auto px-4">
+    <div class="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-xl shadow-md p-6">
     <!-- Header -->
     <div class="flex justify-between items-center mb-6">
       <div class="flex items-center gap-2">
@@ -26,7 +27,7 @@
     <!-- Tabs -->
     <div class="mb-6">
       <ul class="flex gap-4 text-sm font-semibold border-b border-gray-300 dark:border-gray-600">
-        <li><button class="tab-link border-b-2 border-blue-500 pb-2" data-tab="base64">Base64</button></li>
+        <li><button class="tab-link pb-2" data-tab="base64">Base64</button></li>
         <li><button class="tab-link pb-2" data-tab="json">JSON</button></li>
         <li><button class="tab-link pb-2" data-tab="password">Password Generator</button></li>
         <li><button class="tab-link pb-2" data-tab="qrcode">QR Code</button></li>
@@ -63,7 +64,7 @@
       <label class="font-semibold">Result</label>
       <textarea id="jsonOutput" class="w-full p-3 border rounded mb-3 bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white" rows="6" readonly></textarea>
       <div class="flex justify-end">
-        <button onclick="copyJson()" class="bg-purple-500 text-white px-4 py-2 rounded hover:bg-purple-600">Copy Result</button>
+        <button onclick="copyJson()" class="bg-purple-500 text-white px-4 py-2 rounded hover:bg-purple-600">Copy</button>
       </div>
     </div>
 
@@ -104,6 +105,7 @@
       <button onclick="generateHash()" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Generate SHA256</button>
       <textarea id="hashResult" class="w-full p-3 mt-3 border rounded bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white" rows="3" readonly></textarea>
     </div>
+    </div>
   </div>
 
 <script>
@@ -113,9 +115,13 @@ function showError(title, text) {
 function showTab(id) {
   document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
   document.getElementById(id).classList.remove('hidden');
-  document.querySelectorAll('.tab-link').forEach(link => link.classList.remove('border-blue-500'));
+
+  document.querySelectorAll('.tab-link').forEach(link => {
+    link.classList.remove('border-b-2', 'border-blue-500');
+  });
+
   const activeTab = document.querySelector(`.tab-link[data-tab="${id}"]`);
-  if (activeTab) activeTab.classList.add('border-blue-500');
+  if (activeTab) activeTab.classList.add('border-b-2', 'border-blue-500');
 }
 
 function toggleDarkMode() {
@@ -130,6 +136,7 @@ function toggleDarkMode() {
   document.querySelectorAll('.tab-link').forEach(btn => {
     btn.addEventListener('click', () => showTab(btn.dataset.tab));
   });
+  showTab('base64');
 })();
 
 function manualEncode() {
