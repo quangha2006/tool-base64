@@ -2,7 +2,7 @@
 <html lang="en" class="transition duration-300">
 <head>
   <meta charset="UTF-8" />
-  <title>Base64 Encoder/Decoder</title>
+  <title>Toolbox: Base64, JSON</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
@@ -38,6 +38,8 @@
     <div class="flex justify-between mb-4">
       <button onclick="manualEncode()" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Encode</button>
       <button onclick="manualDecode()" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">Decode</button>
+      <button onclick="minifyJson()" class="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600">Minify JSON</button>
+      <button onclick="beautifyJson()" class="bg-pink-500 text-white px-4 py-2 rounded hover:bg-pink-600">Beautify JSON</button>
       <button onclick="clearAll()" class="bg-gray-300 dark:bg-gray-600 text-black dark:text-white px-4 py-2 rounded hover:bg-gray-400 dark:hover:bg-gray-500">Clear</button>
     </div>
 
@@ -46,7 +48,7 @@
 
     <div class="flex justify-between items-center">
       <button onclick="copyToClipboard()" class="bg-purple-500 text-white px-4 py-2 rounded hover:bg-purple-600">Copy Result</button>
-      <button id="downloadBtn" onclick="downloadDecoded()" class="bg-emerald-500 text-white px-4 py-2 rounded hover:bg-emerald-600 hidden">Download Decoded</button>
+      <button id="downloadBtn" onclick="downloadDecoded()" class="bg-emerald-500 text-white px-4 py-2 rounded hover:bg-emerald-600 hidden">Download</button>
     </div>
 
     <p id="status" class="text-sm text-green-600 dark:text-green-400 mt-2 hidden">Copied to clipboard!</p>
@@ -86,6 +88,32 @@
       output.select();
       document.execCommand("copy");
       document.getElementById("status").classList.remove("hidden");
+    }
+
+    function minifyJson() {
+      const input = document.getElementById("input").value;
+      try {
+        const parsed = JSON.parse(input);
+        const minified = JSON.stringify(parsed);
+        document.getElementById("output").value = minified;
+        document.getElementById("status").classList.add("hidden");
+        document.getElementById("downloadBtn").classList.remove("hidden");
+      } catch (err) {
+      showError("Invalid JSON", "The input is not valid JSON.");
+      }
+    }
+
+    function beautifyJson() {
+      const input = document.getElementById("input").value;
+      try {
+        const parsed = JSON.parse(input);
+        const beautified = JSON.stringify(parsed, null, 2); // 2-space indent
+        document.getElementById("output").value = beautified;
+        document.getElementById("status").classList.add("hidden");
+        document.getElementById("downloadBtn").classList.remove("hidden");
+      } catch (err) {
+      showError("Invalid JSON", "The input is not valid JSON.");
+      }
     }
 
     function clearAll() {
