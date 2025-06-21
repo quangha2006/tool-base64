@@ -9,6 +9,7 @@
   </script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jsrsasign@10.5.26/lib/jsrsasign-all-min.js"></script>
 </head>
 <body class="bg-gray-100 dark:bg-gray-900 min-h-screen py-10 text-gray-800 dark:text-gray-200 transition duration-300">
   <div class="max-w-4xl mx-auto px-4">
@@ -32,6 +33,7 @@
         <li><button class="tab-link pb-2" data-tab="password">Password Generator</button></li>
         <li><button class="tab-link pb-2" data-tab="qrcode">QR Code</button></li>
         <li><button class="tab-link pb-2" data-tab="hash">SHA256</button></li>
+        <li><button class="tab-link pb-2" data-tab="jwt">JWT Decoder</button></li>
       </ul>
     </div>
 
@@ -110,6 +112,26 @@
       </div>
 
       <textarea id="hashResult" class="w-full p-3 border rounded bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white" rows="3" readonly></textarea>
+    </div>
+    <!-- JWT Tab -->
+    <div id="jwt" class="tab-content hidden">
+      <label class="font-semibold">JWT Token:</label>
+      <textarea id="jwtInput" class="w-full p-3 mb-3 border rounded dark:bg-gray-800 dark:border-gray-600 dark:text-white" rows="4" placeholder="Paste your JWT here..."></textarea>
+      <label class="font-semibold mt-4 block">Verify Signature (optional secret):</label>
+      <div class="mb-3">
+        <select id="jwtAlg" class="w-full p-2 border rounded dark:bg-gray-800 dark:border-gray-600 dark:text-white mb-2">
+        <option value="">No verification</option>
+        <option value="HS256">HS256 (Secret)</option>
+        <option value="RS256">RS256 (Public Key)</option>
+        </select>
+        <textarea id="jwtVerifyKey" class="w-full p-3 border rounded dark:bg-gray-800 dark:border-gray-600 dark:text-white" rows="4" placeholder="Enter secret or public key..."></textarea>
+      </div>
+      <div id="jwtVerifyResult" class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4 hidden"></div>
+      <button onclick="decodeJWT()" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Decode</button>
+      <label class="font-semibold mt-4 block">Header:</label>
+      <pre id="jwtHeader" class="w-full p-3 border rounded bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white overflow-auto"></pre>
+      <label class="font-semibold mt-4 block">Payload:</label>
+      <pre id="jwtPayload" class="w-full p-3 border rounded bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white overflow-auto"></pre>
     </div>
 
     </div>
@@ -294,6 +316,61 @@ async function md5(str) {
     return "MD5 not supported in this browser";
   }
 }
+function decodeJWT() {
+  const token = document.getElementById("jwtInput").value;
+  const parts = token.split(".");
+  const algorithm = document.getElementById("jwtAlg").value;
+  const verifyKey = document.getElementById("jwtVerifyKey").value.trim();
+  const verifyDisplay = document.getElementById("jwtVerifyResult");
+
+  if (parts.length !== 3) {
+    Swal.fire({ icon: 'error', title: 'Invalid JWT', text: 'JWT must have 3 parts separated by dots.' });
+    return;
+  }
+
+  try {
+    const decode = str => decodeURIComponent(
+      atob(str.replace(/-/g, '+').replace(/_/g, '/'))
+        .split('')
+        .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+        .join('')
+    );
+
+    const header = JSON.stringify(JSON.parse(decode(parts[0])), null, 2);
+    const payload = JSON.stringify(JSON.parse(decode(parts[1])), null, 2);
+
+    document.getElementById("jwtHeader").textContent = header;
+    document.getElementById("jwtPayload").textContent = payload;
+
+    // Verify signature (if algorithm & key provided)
+    if (algorithm && verifyKey) {
+      let isValid = false;
+      try {
+        if (algorithm === "HS256") {
+          isValid = KJUR.jws.JWS.verify(token, verifyKey, ["HS256"]);
+        } else if (algorithm === "RS256") {
+          const pubKey = KEYUTIL.getKey(verifyKey);
+          isValid = KJUR.jws.JWS.verify(token, pubKey, ["RS256"]);
+        }
+
+        verifyDisplay.textContent = isValid ? "✅ Signature is valid!" : "❌ Invalid signature!";
+        verifyDisplay.classList.remove("hidden");
+        verifyDisplay.classList.toggle("text-green-500", isValid);
+        verifyDisplay.classList.toggle("text-red-500", !isValid);
+      } catch (err) {
+        verifyDisplay.textContent = "⚠️ Error verifying signature: " + err.message;
+        verifyDisplay.classList.remove("hidden");
+        verifyDisplay.classList.add("text-yellow-500");
+      }
+    } else {
+      verifyDisplay.classList.add("hidden");
+    }
+
+  } catch (e) {
+    Swal.fire({ icon: 'error', title: 'Decode Error', text: 'Failed to decode JWT.' });
+  }
+}
+
 </script>
 </body>
 </html>
